@@ -156,10 +156,15 @@ def traverse_and_collect(node, category_id=None):
                 # Si tenemos un ID de categoría pero no está en nuestro diccionario,
                 # lo añadimos como "Categoría Desconocida" para evitar FK Violations.
                 if p_cat_id and p_cat_id not in ALL_CATEGORIES:
+                    # Intentar heredar el padre si no es la misma categoría
+                    inherited_parent = None
+                    if category_id and int(float(category_id)) != p_cat_id:
+                        inherited_parent = int(float(category_id))
+                        
                     ALL_CATEGORIES[p_cat_id] = {
                         'id': p_cat_id,
                         'nombre': f'Categoría {p_cat_id}',
-                        'parent_id': None
+                        'parent_id': inherited_parent
                     }
 
                 product_info = {
