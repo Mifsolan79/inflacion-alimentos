@@ -1,4 +1,4 @@
-name: 🛒 Scraper Mensual Mercadona
+name: Scraper Mensual Mercadona
 
 on:
   # Ejecutar el día 1 de cada mes a las 3:00 AM UTC
