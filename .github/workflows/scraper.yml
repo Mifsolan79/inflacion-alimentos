@@ -1,39 +1,58 @@
-name: Scraper Mensual Mercadona
+name: Mercadona Supabase Sync
 
 on:
   schedule:
     - cron: '0 3 1 * *'
   workflow_dispatch:
+    inputs:
+      run_mode:
+        description: 'Choose what to run'
+        required: true
+        default: backfill
+        type: choice
+        options:
+          - backfill
+          - scrape
+          - backfill_and_scrape
 
 jobs:
-  scrape:
-    name: Scrape Mercadona Prices
+  sync:
+    name: Sync Mercadona data
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
-      - name: 📥 Checkout código
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: 🐍 Setup Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
 
-      - name: 📦 Instalar dependencias
+      - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: 🚀 Ejecutar Scraper
+      - name: Backfill historical CSVs into Supabase
+        if: github.event_name == 'workflow_dispatch' && (inputs.run_mode == 'backfill' || inputs.run_mode == 'backfill_and_scrape')
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python subir_csv.py
+
+      - name: Scrape latest Mercadona prices
+        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && (inputs.run_mode == 'scrape' || inputs.run_mode == 'backfill_and_scrape'))
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: python Precios_mercadona.py
 
-      - name: 📋 Subir logs como artifact
+      - name: Upload logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: scraper-log-${{ github.run_number }}
-          path: "*.log"
+          name: mercadona-sync-${{ github.run_number }}
+          path: '*.log'
+          if-no-files-found: ignore
           retention-days: 30

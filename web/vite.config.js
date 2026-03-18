@@ -1,9 +1,8 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  // Base path — cambiar si el sitio va en un subdirectorio
-  // Ej: '/inflacion/' si va en tudominio.com/inflacion/
-  base: '/',
+  // Base path — './' permite que funcione en cualquier carpeta (Hostinger, etc.)
+  base: './',
   
   build: {
     // Carpeta de salida

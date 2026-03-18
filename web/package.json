@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "predev": "node generate-analytics.mjs",
+    "prebuild": "node generate-analytics.mjs",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
