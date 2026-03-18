@@ -73,19 +73,22 @@ def init_supabase():
 
 def collect_categories(node, parent_id=None):
     """Recorre el árbol de categorías y las almacena."""
-    cat_id = node.get('id')
-    cat_name = node.get('name', '')
-    
-    if cat_id and cat_name:
-        ALL_CATEGORIES[cat_id] = {
-            'id': cat_id,
-            'nombre': cat_name,
-            'parent_id': parent_id
-        }
-    
-    if 'categories' in node and node['categories']:
-        for sub in node['categories']:
-            collect_categories(sub, parent_id=cat_id)
+    try:
+        cat_id = int(node.get('id'))
+        cat_name = node.get('name', '')
+        
+        if cat_id and cat_name:
+            ALL_CATEGORIES[cat_id] = {
+                'id': cat_id,
+                'nombre': cat_name,
+                'parent_id': int(parent_id) if parent_id is not None else None
+            }
+        
+        if 'categories' in node and node['categories']:
+            for sub in node['categories']:
+                collect_categories(sub, parent_id=cat_id)
+    except (TypeError, ValueError):
+        pass
 
 
 def traverse_and_collect(node, category_id=None):
@@ -143,8 +146,14 @@ def traverse_and_collect(node, category_id=None):
                     final_format = packaging
                 # ----------------------------------------
 
+                # --- ID DE CATEGORÍA SANITIZAD0 ---
+                try:
+                    p_cat_id = int(current_cat_id) if current_cat_id is not None else None
+                except (ValueError, TypeError):
+                    p_cat_id = None
+
                 product_info = {
-                    'id': prod_id,
+                    'id': int(prod_id),
                     'name': p.get('display_name', ''),
                     'pack_size': final_format,
                     'price': price_unit,
@@ -152,7 +161,7 @@ def traverse_and_collect(node, category_id=None):
                     'url': full_url,
                     'image_url': p.get('thumbnail', ''),
                     'is_heavy': p.get('is_heavy_buy', False),
-                    'category_id': current_cat_id
+                    'category_id': p_cat_id
                 }
                 ALL_PRODUCTS.append(product_info)
             except Exception as e:
@@ -161,6 +170,10 @@ def traverse_and_collect(node, category_id=None):
     # Recursividad
     if 'categories' in node and node['categories']:
         for subresult in node['categories']:
+            traverse_and_collect(subresult, category_id=current_cat_id)
+    elif 'badged_categories' in node and node['badged_categories']:
+        # Mercadona a veces usa 'badged_categories' para niveles profundos
+        for subresult in node['badged_categories']:
             traverse_and_collect(subresult, category_id=current_cat_id)
 
 

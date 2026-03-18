@@ -64,21 +64,38 @@ async function loadData() {
     if (catErr) throw catErr;
     allCategories = cats || [];
 
-    // Load products with latest prices
-    const { data: products, error: prodErr } = await supabase
-      .from('productos')
-      .select(`
-        *,
-        historial_precios (
-          precio,
-          precio_referencia,
-          fecha
-        )
-      `)
-      .order('nombre');
-    
-    if (prodErr) throw prodErr;
-    allProducts = (products || []).map(p => ({
+    // Load all products with latest prices (handling Supabase 1000 row limit)
+    let allFetchedProducts = [];
+    let from = 0;
+    const limit = 1000;
+    let hasMore = true;
+
+    while (hasMore) {
+      const { data: products, error: prodErr } = await supabase
+        .from('productos')
+        .select(`
+          *,
+          historial_precios (
+            precio,
+            precio_referencia,
+            fecha
+          )
+        `)
+        .order('nombre')
+        .range(from, from + limit - 1);
+      
+      if (prodErr) throw prodErr;
+      
+      if (products && products.length > 0) {
+        allFetchedProducts = allFetchedProducts.concat(products);
+        from += limit;
+        if (products.length < limit) hasMore = false;
+      } else {
+        hasMore = false;
+      }
+    }
+
+    allProducts = allFetchedProducts.map(p => ({
       ...p,
       latestPrice: getLatestPrice(p.historial_precios),
       priceHistory: (p.historial_precios || []).sort((a, b) => 
