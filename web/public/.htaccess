@@ -1,0 +1,60 @@
+# Habilitar compresión gzip
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/css application/javascript application/json image/svg+xml
+</IfModule>
+
+# Cache de archivos estáticos (1 año para assets con hash, 1 hora para HTML)
+<IfModule mod_expires.c>
+  ExpiresActive On
+  
+  # HTML — no cachear mucho (para que siempre cargue la versión actual)
+  ExpiresByType text/html "access plus 1 hour"
+  
+  # CSS y JS con hash en el nombre — cachear 1 año
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+  
+  # Imágenes
+  ExpiresByType image/png "access plus 1 month"
+  ExpiresByType image/jpg "access plus 1 month"
+  ExpiresByType image/jpeg "access plus 1 month"
+  ExpiresByType image/gif "access plus 1 month"
+  ExpiresByType image/svg+xml "access plus 1 month"
+  ExpiresByType image/webp "access plus 1 month"
+  ExpiresByType image/x-icon "access plus 1 year"
+  
+  # Fuentes
+  ExpiresByType font/woff2 "access plus 1 year"
+  ExpiresByType font/woff "access plus 1 year"
+</IfModule>
+
+# Seguridad básica
+<IfModule mod_headers.c>
+  # Prevenir clickjacking
+  Header set X-Frame-Options "SAMEORIGIN"
+  
+  # Prevenir MIME sniffing
+  Header set X-Content-Type-Options "nosniff"
+  
+  # Referrer policy
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# SPA fallback — redirigir todas las rutas a index.html
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  
+  # Si el archivo o directorio existe, servirlo directamente
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  
+  # Si no existe, servir index.html (para SPA routing futuro)
+  RewriteRule . /index.html [L]
+</IfModule>
+
+# Bloquear acceso a archivos sensibles
+<FilesMatch "\.(env|log|md)$">
+  Order allow,deny
+  Deny from all
+</FilesMatch>

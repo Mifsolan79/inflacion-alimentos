@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Dashboard de seguimiento de precios e inflación de Mercadona. Visualiza tendencias, busca productos y analiza variaciones de precios." />
+    <title>Inflación Track — Dashboard de Precios Mercadona</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <span class="logo-icon">📊</span>
+          <h1>Inflación<span class="logo-accent">Track</span></h1>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-view="dashboard">
+          <span class="nav-icon">🏠</span>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-item" data-view="search">
+          <span class="nav-icon">🔍</span>
+          <span>Buscar</span>
+        </button>
+        <button class="nav-item" data-view="categories">
+          <span class="nav-icon">📂</span>
+          <span>Categorías</span>
+        </button>
+        <button class="nav-item" data-view="trends">
+          <span class="nav-icon">📈</span>
+          <span>Tendencias</span>
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="data-status" id="dataStatus">
+          <span class="status-dot"></span>
+          <span class="status-text">Conectando...</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      <!-- TOP BAR -->
+      <header class="topbar">
+        <div class="search-container">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="globalSearch" placeholder="Buscar productos..." autocomplete="off" />
+          <div id="searchDropdown" class="search-dropdown hidden"></div>
+        </div>
+        <div class="topbar-right">
+          <span class="last-update" id="lastUpdate">Última actualización: —</span>
+        </div>
+      </header>
+
+      <!-- VIEW: DASHBOARD -->
+      <section id="view-dashboard" class="view active">
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon stat-icon-products">🛒</div>
+            <div class="stat-info">
+              <span class="stat-value" id="totalProducts">—</span>
+              <span class="stat-label">Productos</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon stat-icon-categories">📂</div>
+            <div class="stat-info">
+              <span class="stat-value" id="totalCategories">—</span>
+              <span class="stat-label">Categorías</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon stat-icon-up">📈</div>
+            <div class="stat-info">
+              <span class="stat-value" id="priceUp">—</span>
+              <span class="stat-label">Subieron</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon stat-icon-down">📉</div>
+            <div class="stat-info">
+              <span class="stat-value" id="priceDown">—</span>
+              <span class="stat-label">Bajaron</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="charts-row">
+          <div class="chart-card chart-card-large">
+            <h2 class="chart-title">Top 10 — Mayor Subida de Precio</h2>
+            <canvas id="chartTopUp"></canvas>
+          </div>
+          <div class="chart-card chart-card-large">
+            <h2 class="chart-title">Top 10 — Mayor Bajada de Precio</h2>
+            <canvas id="chartTopDown"></canvas>
+          </div>
+        </div>
+
+        <!-- Recent Products -->
+        <div class="section-card">
+          <h2 class="section-title">Últimos Productos Actualizados</h2>
+          <div id="recentProducts" class="product-grid">
+            <div class="loading-skeleton">Cargando productos...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW: SEARCH -->
+      <section id="view-search" class="view">
+        <div class="view-header">
+          <h2>Buscar Productos</h2>
+          <p class="view-subtitle">Busca entre todos los productos de Mercadona</p>
+        </div>
+        <div class="search-filters">
+          <input type="text" id="searchInput" placeholder="Escribe el nombre del producto..." class="search-main-input" />
+        </div>
+        <div id="searchResults" class="product-grid">
+          <p class="empty-state">Escribe para buscar productos</p>
+        </div>
+      </section>
+
+      <!-- VIEW: CATEGORIES -->
+      <section id="view-categories" class="view">
+        <div class="view-header">
+          <h2>Categorías</h2>
+          <p class="view-subtitle">Explora los productos por categoría</p>
+        </div>
+        <div id="categoryList" class="category-grid">
+          <div class="loading-skeleton">Cargando categorías...</div>
+        </div>
+        <div id="categoryProducts" class="product-grid hidden"></div>
+      </section>
+
+      <!-- VIEW: TRENDS -->
+      <section id="view-trends" class="view">
+        <div class="view-header">
+          <h2>Tendencias de Inflación</h2>
+          <p class="view-subtitle">Análisis de la evolución de precios</p>
+        </div>
+        <div class="chart-card" style="margin-bottom: 2rem;">
+          <h3 class="chart-title">Precio Medio General — Evolución Temporal</h3>
+          <canvas id="chartAvgPrice"></canvas>
+        </div>
+        <div class="charts-row">
+          <div class="chart-card chart-card-large">
+            <h3 class="chart-title">Inflación por Categoría (%)</h3>
+            <canvas id="chartCategoryInflation"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- PRODUCT DETAIL MODAL -->
+      <div id="productModal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+          <button class="modal-close" id="modalClose">✕</button>
+          <div class="modal-body">
+            <div class="modal-product-header">
+              <img id="modalImage" class="modal-product-image" alt="Producto" />
+              <div class="modal-product-info">
+                <h2 id="modalName" class="modal-product-name"></h2>
+                <span id="modalFormat" class="modal-product-format"></span>
+                <div class="modal-product-prices">
+                  <span class="modal-price-current" id="modalPrice"></span>
+                  <span class="modal-price-ref" id="modalPriceRef"></span>
+                </div>
+                <a id="modalLink" class="modal-link" href="#" target="_blank" rel="noopener">Ver en Mercadona ↗</a>
+              </div>
+            </div>
+            <div class="modal-chart-container">
+              <h3 class="chart-title">Historial de Precio</h3>
+              <canvas id="chartProductHistory"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>
