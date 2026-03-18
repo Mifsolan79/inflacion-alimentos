@@ -148,12 +148,22 @@ def traverse_and_collect(node, category_id=None):
 
                 # --- ID DE CATEGORÍA SANITIZAD0 ---
                 try:
-                    p_cat_id = int(current_cat_id) if current_cat_id is not None else None
+                    # Usar float primero por si viene como "123.0"
+                    p_cat_id = int(float(current_cat_id)) if current_cat_id is not None else None
                 except (ValueError, TypeError):
                     p_cat_id = None
+                
+                # Si tenemos un ID de categoría pero no está en nuestro diccionario,
+                # lo añadimos como "Categoría Desconocida" para evitar FK Violations.
+                if p_cat_id and p_cat_id not in ALL_CATEGORIES:
+                    ALL_CATEGORIES[p_cat_id] = {
+                        'id': p_cat_id,
+                        'nombre': f'Categoría {p_cat_id}',
+                        'parent_id': None
+                    }
 
                 product_info = {
-                    'id': int(prod_id),
+                    'id': int(float(prod_id)),
                     'name': p.get('display_name', ''),
                     'pack_size': final_format,
                     'price': price_unit,
