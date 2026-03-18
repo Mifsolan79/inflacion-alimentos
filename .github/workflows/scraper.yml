@@ -1,13 +1,39 @@
-name: Scraper
+name: Scraper Mensual Mercadona
+
 on:
-  workflow_dispatch:
   schedule:
     - cron: '0 3 1 * *'
+  workflow_dispatch:
 
 jobs:
-  test:
+  scrape:
+    name: Scrape Mercadona Prices
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Run
-        run: echo "Hello World"
+      - name: 📥 Checkout código
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: 📦 Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: 🚀 Ejecutar Scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python Precios_mercadona.py
+
+      - name: 📋 Subir logs como artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scraper-log-${{ github.run_number }}
+          path: "*.log"
+          retention-days: 30
